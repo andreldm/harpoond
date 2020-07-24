@@ -1,0 +1,8 @@
+[Unit]
+Description=Controls Corsair Harpoon Mouse's LEDs
+
+[Service]
+ExecStart=/usr/bin/harpoond
+
+[Install]
+WantedBy=default.target
