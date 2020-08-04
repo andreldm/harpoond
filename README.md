@@ -11,12 +11,8 @@ Bluetooth support is also out of scope.
 ```
 git clone https://github.com/andreldm/harpoond
 cd harpoond
-# Tweak values in harpoond.c, where it says "Set my configuration"
+# Tweak values in harpoond.c, where it says "Set custom configuration"
 make
 sudo make install
 systemctl --user enable --now harpoond.service
 ```
-
-## TODO
-
-- Detect when mouse is plugged/unplugged
