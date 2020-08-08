@@ -1,0 +1,12 @@
+CC=gcc
+CFLAGS=-O2 -Wall -Wextra $(shell pkg-config --cflags libusb-1.0) -Wl,-Bstatic -mwindows
+LDFLAGS=$(shell pkg-config --libs libusb-1.0)
+PREFIX=/usr
+
+harpoond: harpoond.c
+	$(CC) $(CFLAGS) harpoond.c -o harpoond $(LDFLAGS)
+
+clean:
+	rm -f harpoond.exe
+
+.PHONY: clean install
