@@ -30,7 +30,7 @@ static void signal_handler()
     RUNNING = 0;
 }
 
-static int send(Device *device, unsigned int length, ...)
+static int transfer(Device *device, unsigned int length, ...)
 {
     int r;
     int transferred;
@@ -107,13 +107,13 @@ static void init_device(Device *device)
     grab_device(device);
 
     /* Init */
-    send(device, 5, 0x08, 0x01, 0x03, 0x00, 0x02);
+    transfer(device, 5, 0x08, 0x01, 0x03, 0x00, 0x02);
     if (device->type == DONGLE) 
-        send(device, 5, 0x09, 0x01, 0x03, 0x00, 0x02);
-    send(device, 4, device->command_prefix, 0x0d, 0x00, 0x01);
+        transfer(device, 5, 0x09, 0x01, 0x03, 0x00, 0x02);
+    transfer(device, 4, device->command_prefix, 0x0d, 0x00, 0x01);
 
     /* Set custom configuration */
-    send(device, 12, device->command_prefix,
+    transfer(device, 12, device->command_prefix,
          0x06, 0x00, 0x06, 0x00, 0x00, 0x00,
          0x00,  /* Indicator LED's red */
          0x00,  /* Main LED's red */
@@ -122,7 +122,7 @@ static void init_device(Device *device)
          0x00,  /* Indicator LED's blue */
          0x00); /* Main LED's blue */
 
-    send(device, 5, 0x01, 0x20, 0x00, 0x08, 0x70); /* Set DPI (708 hex = 1800) */
+    transfer(device, 5, 0x01, 0x20, 0x00, 0x08, 0x70); /* Set DPI (708 hex = 1800) */
 
     ungrab_device(device);
 
@@ -186,7 +186,7 @@ static void keep_alive(Device *device)
     if (!device->initialized) init_device(device);
 
     if (grab_device(device) < 0) return;
-    send(device, 2, device->command_prefix, 0x12);
+    transfer(device, 2, device->command_prefix, 0x12);
     ungrab_device(device);
 }
 
