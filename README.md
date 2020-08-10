@@ -21,7 +21,7 @@ systemctl --user enable --now harpoond.service
 
 ### Windows
 
-While it's possible to build this project Visual Studio, I recommend [MSYS2](https://www.msys2.org/) because it's easier to get libusb to work and requires no code changes.
+While it's possible to build this project with Visual Studio, I recommend [MSYS2](https://www.msys2.org/) because it's easier to get libusb to work and requires no code changes.
 
 In a mingw64 shell, run:
 
