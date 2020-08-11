@@ -122,7 +122,7 @@ static void init_device(Device *device)
          0x00,  /* Indicator LED's blue */
          0x00); /* Main LED's blue */
 
-    transfer(device, 5, 0x01, 0x20, 0x00, 0x08, 0x70); /* Set DPI (708 hex = 1800) */
+    transfer(device, 6, device->command_prefix, 0x01, 0x20, 0x00, 0x08, 0x70); /* Set DPI (708 hex = 1800) */
 
     ungrab_device(device);
 
