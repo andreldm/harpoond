@@ -114,15 +114,36 @@ static void init_device(Device *device)
 
     /* Set custom configuration */
     transfer(device, 12, device->command_prefix,
-         0x06, 0x00, 0x06, 0x00, 0x00, 0x00,
-         0x00,  /* Indicator LED's red */
-         0x00,  /* Main LED's red */
-         0xff,  /* Indicator LED's green */
-         0x00,  /* Main LED's green */
-         0x00,  /* Indicator LED's blue */
-         0x00); /* Main LED's blue */
+        0x06, 0x00, 0x06, 0x00, 0x00, 0x00, /* Do not change */
+        0x00,  /* Indicator LED's red */
+        0x00,  /* Main LED's red */
+        0xff,  /* Indicator LED's green */
+        0x00,  /* Main LED's green */
+        0x00,  /* Indicator LED's blue */
+        0x00); /* Main LED's blue */
 
-    transfer(device, 6, device->command_prefix, 0x01, 0x20, 0x00, 0x08, 0x70); /* Set DPI (708 hex = 1800) */
+    transfer(device, 6, device->command_prefix,
+        0x01, 0x20, 0x00, /* Do not change */
+        0x08, 0x70);      /* DPI, (708 hex = 1800) */
+
+    /*
+     * Note that values are encoded in little-endian system, meaning the least
+     * significant portion (bytes) of a number comes first. For example, if you
+     * want to 3200 DPI, first convert it to hexadecimal, which is 0xC80, then
+     * split it in half and reverse the order: 0x00, 0xC8, finally pass it to
+     * the function call.
+     * More examples:
+     * 3000 DPI  -> 0xBB8  -> 0xBB, 0x08 -> 0x08, 0xBB
+     * 10000 DPI -> 0x2710 -> 0x27, 0x10 -> 0x10, 0x27
+     *
+     * Once you set a new DPI value and recompile harpoond, please stop it, turn
+     * the mouse off and on then start hapoond again.
+     *
+     * Also, note that the mouse is kind of picky with these values, some values
+     * are completely ignored. I couldn't figure out any pattern here, so you
+     * need to spend some time on trial & error until you get a value that works
+     * and is close to what you want.
+     */
 
     ungrab_device(device);
 
