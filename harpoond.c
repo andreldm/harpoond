@@ -129,15 +129,15 @@ static void init_device(Device *device)
     /*
      * Note that values are encoded in little-endian system, meaning the least
      * significant portion (bytes) of a number comes first. For example, if you
-     * want to 3200 DPI, first convert it to hexadecimal, which is 0xC80, then
-     * split it in half and reverse the order: 0x00, 0xC8, finally pass it to
-     * the function call.
+     * want to set 3200 DPI, first convert it to hexadecimal, which is 0xC80,
+     * then split it in half and reverse the order: 0x00, 0xC8, finally pass it
+     * to the function call above.
      * More examples:
      * 3000 DPI  -> 0xBB8  -> 0xBB, 0x08 -> 0x08, 0xBB
      * 10000 DPI -> 0x2710 -> 0x27, 0x10 -> 0x10, 0x27
      *
      * Once you set a new DPI value and recompile harpoond, please stop it, turn
-     * the mouse off and on then start hapoond again.
+     * the mouse off and on then start harpoond again.
      *
      * Also, note that the mouse is kind of picky with these values, some values
      * are completely ignored. I couldn't figure out any pattern here, so you
