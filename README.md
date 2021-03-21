@@ -10,6 +10,8 @@ Bluetooth support is also out of scope.
 
 ### Linux
 
+You need to have installed a C compiler and libsub, on Arch that's possible with `pacman -S gcc libusb`, while on Ubuntu/Debian `apt install gcc libusb-1.0-0-dev`.
+
 ```
 git clone https://github.com/andreldm/harpoond
 cd harpoond
