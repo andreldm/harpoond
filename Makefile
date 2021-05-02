@@ -14,6 +14,12 @@ install:
 	@echo
 	@echo '### Please unplug and plug back the mouse ###'
 
+uninstall:
+	rm -f $(PREFIX)/bin/harpoond
+	rm -f $(PREFIX)/lib/systemd/user/harpoond.service
+	rm -f $(PREFIX)/lib/udev/rules.d/99-harpoond.rules
+	udevadm control --reload-rules
+
 clean:
 	rm -f harpoond
 

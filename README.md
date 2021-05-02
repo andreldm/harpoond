@@ -35,3 +35,16 @@ cd harpoond
 make -f Makefile.msys2
 # Press Win + R, execute shell:startup, create a shortcut to harpoon.exe in that folder
 ```
+
+## Uninstall
+
+### Linux
+
+```
+systemctl --user disable --now harpoond.service
+sudo make uninstall
+```
+
+### Windows
+
+Just remove the shortcut from the startup folder and delete the source folder.
