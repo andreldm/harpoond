@@ -113,7 +113,7 @@ static void init_device(Device *device)
     transfer(device, 4, device->command_prefix, 0x0d, 0x00, 0x01);
 
     /* Set custom configuration */
-    transfer(device, 12, device->command_prefix,
+    transfer(device, 13, device->command_prefix,
         0x06, 0x00, 0x06, 0x00, 0x00, 0x00, /* Do not change */
         0x00,  /* Indicator LED's red */
         0x00,  /* Main LED's red */
