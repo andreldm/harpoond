@@ -6,6 +6,14 @@ Being able to reliably turn off the mouse LED and set its color (static) is what
 It's not the goal of this project to offer all features present in iCUE, for that OpenRGB and ckb-next are more suited.
 Bluetooth support is also out of scope.
 
+> Attention: if you found this project it's very likely that you already own this mouse, if not don't buy it. If you still can return it do so.
+>
+> I admit this is not pricey mouse, but its quality is terrible considering the price point.
+> The dongle is a joke, my 10-year-old logitech M305 is much more reliable.
+> In less than one year double clicks (aka ghost clicks) started, I just didn't return it because I bought while abroad.
+>
+> Finally, the fact that it cannot persist settings and reset them after 60 seconds seems to be by design so users will have iCUE running all the time, which is either stupid or shady.
+
 ## How to build and use
 
 ### Linux
