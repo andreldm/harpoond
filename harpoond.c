@@ -12,6 +12,7 @@
 #define ENDPOINT_IN           0x84
 #define WIRED_COMMAND_PREFIX  0x08
 #define DONGLE_COMMAND_PREFIX 0x09
+#define WAIT_TIME             50
 
 /* Set custom configuration */
 /* Main LED */
@@ -51,7 +52,7 @@ static struct timeval zero_tv = {0};
 
 typedef enum {NONE = 0, WIRED, DONGLE} DeviceType;
 typedef struct
-{ 
+{
    DeviceType type;
    unsigned char command_prefix;
    libusb_device_handle *handle;
@@ -141,7 +142,7 @@ static void init_device(Device *device)
 
     /* Init */
     transfer(device, 5, 0x08, 0x01, 0x03, 0x00, 0x02);
-    if (device->type == DONGLE) 
+    if (device->type == DONGLE)
         transfer(device, 5, 0x09, 0x01, 0x03, 0x00, 0x02);
     transfer(device, 4, device->command_prefix, 0x0d, 0x00, 0x01);
 
