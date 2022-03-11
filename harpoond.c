@@ -12,13 +12,47 @@
 #define ENDPOINT_IN           0x84
 #define WIRED_COMMAND_PREFIX  0x08
 #define DONGLE_COMMAND_PREFIX 0x09
+#define WAIT_TIME             50
+
+/* Set custom configuration */
+/* Main LED */
+#define M_RED                 0x1e
+#define M_GREEN               0x00
+#define M_BLUE                0x4c
+
+/* Indicator LED */
+#define I_RED                 0x1e
+#define I_GREEN               0x00
+#define I_BLUE                0x4c
+
+/* DPI, (708 hex = 1800) */
+#define DPI                   0x08, 0x70
+
+/*
+ * Note that values are encoded in little-endian system, meaning the least
+ * significant portion (bytes) of a number comes first. For example, if you
+ * want to set 3200 DPI, first convert it to hexadecimal, which is 0xC80,
+ * then split it in half and reverse the order: 0x00, 0xC8, finally pass it
+ * to the function call above.
+ * More examples:
+ * 3000 DPI  -> 0xBB8  -> 0xBB, 0x08 -> 0x08, 0xBB
+ * 10000 DPI -> 0x2710 -> 0x27, 0x10 -> 0x10, 0x27
+ *
+ * Once you set a new DPI value and recompile harpoond, please stop it, turn
+ * the mouse off and on then start harpoond again.
+ *
+ * Also, note that the mouse is kind of picky with these values, some values
+ * are completely ignored. I couldn't figure out any pattern here, so you
+ * need to spend some time on trial & error until you get a value that works
+ * and is close to what you want.
+ */
 
 static volatile short RUNNING = 1;
 static struct timeval zero_tv = {0};
 
 typedef enum {NONE = 0, WIRED, DONGLE} DeviceType;
 typedef struct
-{ 
+{
    DeviceType type;
    unsigned char command_prefix;
    libusb_device_handle *handle;
@@ -108,42 +142,17 @@ static void init_device(Device *device)
 
     /* Init */
     transfer(device, 5, 0x08, 0x01, 0x03, 0x00, 0x02);
-    if (device->type == DONGLE) 
+    if (device->type == DONGLE)
         transfer(device, 5, 0x09, 0x01, 0x03, 0x00, 0x02);
     transfer(device, 4, device->command_prefix, 0x0d, 0x00, 0x01);
 
-    /* Set custom configuration */
     transfer(device, 13, device->command_prefix,
         0x06, 0x00, 0x06, 0x00, 0x00, 0x00, /* Do not change */
-        0x00,  /* Indicator LED's red */
-        0x00,  /* Main LED's red */
-        0xff,  /* Indicator LED's green */
-        0x00,  /* Main LED's green */
-        0x00,  /* Indicator LED's blue */
-        0x00); /* Main LED's blue */
+        I_RED, M_RED, I_GREEN, M_GREEN, I_BLUE, M_BLUE);
 
     transfer(device, 6, device->command_prefix,
         0x01, 0x20, 0x00, /* Do not change */
-        0x08, 0x70);      /* DPI, (708 hex = 1800) */
-
-    /*
-     * Note that values are encoded in little-endian system, meaning the least
-     * significant portion (bytes) of a number comes first. For example, if you
-     * want to set 3200 DPI, first convert it to hexadecimal, which is 0xC80,
-     * then split it in half and reverse the order: 0x00, 0xC8, finally pass it
-     * to the function call above.
-     * More examples:
-     * 3000 DPI  -> 0xBB8  -> 0xBB, 0x08 -> 0x08, 0xBB
-     * 10000 DPI -> 0x2710 -> 0x27, 0x10 -> 0x10, 0x27
-     *
-     * Once you set a new DPI value and recompile harpoond, please stop it, turn
-     * the mouse off and on then start harpoond again.
-     *
-     * Also, note that the mouse is kind of picky with these values, some values
-     * are completely ignored. I couldn't figure out any pattern here, so you
-     * need to spend some time on trial & error until you get a value that works
-     * and is close to what you want.
-     */
+        DPI);
 
     ungrab_device(device);
 
@@ -211,6 +220,16 @@ static void keep_alive(Device *device)
     ungrab_device(device);
 }
 
+int handle_events(int r)
+{
+    r = libusb_handle_events_timeout_completed(NULL, &zero_tv, NULL);
+    if (r < 0)
+        fprintf(stderr, "libusb failed to handle events: %s\n", libusb_error_name(r));
+    sleep(2);
+
+    return r;
+}
+
 int main()
 {
     int r;
@@ -275,12 +294,21 @@ int main()
     /*
      * KEEP ALIVE AND EVENT LOOP
      */
-    while (RUNNING) {
-        keep_alive(&device);
-        r = libusb_handle_events_timeout_completed(NULL, &zero_tv, NULL);
-        if (r < 0)
-            fprintf(stderr, "libusb failed to handle events: %s\n", libusb_error_name(r));
-        sleep(2);
+    if(RUNNING) {
+        // Force applying new config
+        while (!device.initialized) {
+            keep_alive(&device);
+            r = handle_events(r);
+        }
+
+        for (int i = 0; RUNNING; ++i) {
+            /* Send keep_alive signal every WAIT_TIME s, without blocking whole function. */
+            if(i >= WAIT_TIME / 2) {
+                keep_alive(&device);
+                i = 0;
+            }
+            r = handle_events(r);
+        }
     }
 
     /*
