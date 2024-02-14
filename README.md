@@ -20,7 +20,7 @@ Bluetooth support is also out of scope.
 
 You need to have installed a C compiler and libsub, on Arch that's possible with `pacman -S gcc libusb`, while on Ubuntu/Debian `apt install gcc libusb-1.0-0-dev`.
 
-```
+```shell
 git clone https://github.com/andreldm/harpoond
 cd harpoond
 # Tweak values in harpoond.c, where it says "Set custom configuration"
@@ -35,7 +35,7 @@ While it's possible to build this project with Visual Studio, I recommend [MSYS2
 
 In a mingw64 shell, run:
 
-```
+```shell
 pacman -S git make pkg-config mingw-w64-x86_64-gcc mingw-w64-x86_64-libusb
 git clone https://github.com/andreldm/harpoond
 cd harpoond
@@ -48,7 +48,7 @@ make -f Makefile.msys2
 
 ### Linux
 
-```
+```shell
 systemctl --user disable --now harpoond.service
 sudo make uninstall
 ```
