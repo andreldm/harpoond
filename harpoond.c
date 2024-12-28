@@ -21,6 +21,29 @@ static struct timeval zero_tv = {0};
 static unsigned int r1 = 0, g1 = 0, b1 = 0; /* Main LED, Default: off */
 static unsigned int r2 = 0, g2 = 255, b2 = 0; /* Indicator LED, Default: green */
 
+/*
+ * DPI values are expected in a weird format, I guess it has something to do with
+ * little-endianness. For example, if 3200 DPI is desired, first it has to be
+ * converted to hexadecimal, which is 0xC80, then split it in half: 0xC8, 0x00.
+ *
+ * More examples:
+ * 1800 DPI  -> 0x708  -> 0x70, 0x08
+ * 3000 DPI  -> 0xBB8  -> 0xBB, 0x08
+ * 10000 DPI -> 0x2710 -> 0x27, 0x10
+ *
+ * Those values needs to be reversed though, this is done at init_device.
+ *
+ * Once you set a new DPI value, please stop harpoond it, turn  the mouse off
+ * and on then start harpoond again.
+ *
+ * Also, note that the mouse is kind of picky with these values, some values
+ * are completely ignored. I couldn't figure out any pattern here, so you
+ * need to spend some time on trial & error until you get a value that works
+ * and is close to what you want.
+ */
+static unsigned int dpi = 1800;
+static unsigned int dpi_high, dpi_low;
+
 typedef enum {NONE = 0, WIRED, DONGLE} DeviceType;
 typedef struct
 { 
@@ -39,6 +62,7 @@ static void parse_arguments(int argc, char *argv[])
         {"r2", required_argument, 0, 0},
         {"g2", required_argument, 0, 0},
         {"b2", required_argument, 0, 0},
+        {"dpi", required_argument, 0, 0},
         {0, 0, 0, 0}
     };
 
@@ -47,13 +71,20 @@ static void parse_arguments(int argc, char *argv[])
     while ((opt = getopt_long(argc, argv, "", options, &option_index)) != -1) {
         if (opt == 0) {
             const char *opt_name = options[option_index].name;
-            int value = (int)strtol(optarg, NULL, 16); // Parse hex value
+            int value = atoi(optarg);
             if (strcmp(opt_name, "r1") == 0) r1 = value;
             else if (strcmp(opt_name, "g1") == 0) g1 = value;
             else if (strcmp(opt_name, "b1") == 0) b1 = value;
             else if (strcmp(opt_name, "r2") == 0) r2 = value;
             else if (strcmp(opt_name, "g2") == 0) g2 = value;
             else if (strcmp(opt_name, "b2") == 0) b2 = value;
+            else if (strcmp(opt_name, "dpi") == 0) {
+                if (value < 0 || value > 65535) {
+                    fprintf(stderr, "DPI value must be between 0 and 65535.\n");
+                    exit(EXIT_FAILURE);
+                }
+                dpi = value;
+            }
         } else {
             fprintf(stderr, "Unknown option\n");
             exit(EXIT_FAILURE);
@@ -62,6 +93,20 @@ static void parse_arguments(int argc, char *argv[])
 
     printf("Main LED: (RGB %d, %d, %d) \033[38;2;%d;%d;%dm■\033[0m\n", r1, g1, b1, r1, g1, b1);
     printf("Indicator LED: (RGB %d, %d, %d) \033[38;2;%d;%d;%dm■\033[0m\n", r2, g2, b2, r2, g2, b2);
+
+    if (dpi <= 0xFF) {
+        dpi_high = dpi;
+        dpi_low = 0;
+    }
+    else if (dpi <= 0xFFF) {
+        dpi_high = (dpi & 0xFFF) >> 4;
+        dpi_low = dpi & 0xF;
+    }
+    else {
+        dpi_high = (dpi & 0xFF00) >> 8;
+        dpi_low = dpi & 0xFF;
+    }
+    printf("DPI: %d (Hex: 0x%X, High Byte: 0x%X, Low Byte: 0x%X)\n", dpi, dpi, dpi_high, dpi_low);
 }
 
 static void signal_handler()
@@ -162,27 +207,8 @@ static void init_device(Device *device)
         b1); /* Main LED's blue */
 
     transfer(device, 6, device->command_prefix,
-        0x01, 0x20, 0x00, /* Do not change */
-        0x08, 0x70);      /* DPI, (708 hex = 1800) */
-
-    /*
-     * Note that values are encoded in little-endian system, meaning the least
-     * significant portion (bytes) of a number comes first. For example, if you
-     * want to set 3200 DPI, first convert it to hexadecimal, which is 0xC80,
-     * then split it in half and reverse the order: 0x00, 0xC8, finally pass it
-     * to the function call above.
-     * More examples:
-     * 3000 DPI  -> 0xBB8  -> 0xBB, 0x08 -> 0x08, 0xBB
-     * 10000 DPI -> 0x2710 -> 0x27, 0x10 -> 0x10, 0x27
-     *
-     * Once you set a new DPI value and recompile harpoond, please stop it, turn
-     * the mouse off and on then start harpoond again.
-     *
-     * Also, note that the mouse is kind of picky with these values, some values
-     * are completely ignored. I couldn't figure out any pattern here, so you
-     * need to spend some time on trial & error until you get a value that works
-     * and is close to what you want.
-     */
+        0x01, 0x20, 0x00,   /* Do not change */
+        dpi_low, dpi_high); /* DPI, inverted on purpose, explanation at the top of file */
 
     ungrab_device(device);
 
