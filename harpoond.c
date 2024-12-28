@@ -3,6 +3,9 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <getopt.h>
 
 #define VENDOR_ID             0x1b1c
 #define WIRED_DEVICE_ID       0x1b5e
@@ -15,6 +18,8 @@
 
 static volatile short RUNNING = 1;
 static struct timeval zero_tv = {0};
+static unsigned int r1 = 0x00, g1 = 0x00, b1 = 0x00; // Default: Main LED off
+static unsigned int r2 = 0x00, g2 = 0xff, b2 = 0x00; // Default: Indicator LED green
 
 typedef enum {NONE = 0, WIRED, DONGLE} DeviceType;
 typedef struct
@@ -24,6 +29,37 @@ typedef struct
    libusb_device_handle *handle;
    short initialized;
 } Device;
+
+static void parse_arguments(int argc, char *argv[])
+{
+    struct option options[] = {
+        {"r1", required_argument, 0, 0},
+        {"g1", required_argument, 0, 0},
+        {"b1", required_argument, 0, 0},
+        {"r2", required_argument, 0, 0},
+        {"g2", required_argument, 0, 0},
+        {"b2", required_argument, 0, 0},
+        {0, 0, 0, 0}
+    };
+
+    int opt;
+    int option_index = 0;
+    while ((opt = getopt_long(argc, argv, "", options, &option_index)) != -1) {
+        if (opt == 0) {
+            const char *opt_name = options[option_index].name;
+            int value = (int)strtol(optarg, NULL, 16); // Parse hex value
+            if (strcmp(opt_name, "r1") == 0) r1 = value;
+            else if (strcmp(opt_name, "g1") == 0) g1 = value;
+            else if (strcmp(opt_name, "b1") == 0) b1 = value;
+            else if (strcmp(opt_name, "r2") == 0) r2 = value;
+            else if (strcmp(opt_name, "g2") == 0) g2 = value;
+            else if (strcmp(opt_name, "b2") == 0) b2 = value;
+        } else {
+            fprintf(stderr, "Unknown option\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+}
 
 static void signal_handler()
 {
@@ -115,12 +151,12 @@ static void init_device(Device *device)
     /* Set custom configuration */
     transfer(device, 13, device->command_prefix,
         0x06, 0x00, 0x06, 0x00, 0x00, 0x00, /* Do not change */
-        0x00,  /* Indicator LED's red */
-        0x00,  /* Main LED's red */
-        0xff,  /* Indicator LED's green */
-        0x00,  /* Main LED's green */
-        0x00,  /* Indicator LED's blue */
-        0x00); /* Main LED's blue */
+        r2,  /* Indicator LED's red */
+        r1,  /* Main LED's red */
+        g2,  /* Indicator LED's green */
+        g1,  /* Main LED's green */
+        b2,  /* Indicator LED's blue */
+        b1); /* Main LED's blue */
 
     transfer(device, 6, device->command_prefix,
         0x01, 0x20, 0x00, /* Do not change */
@@ -211,11 +247,13 @@ static void keep_alive(Device *device)
     ungrab_device(device);
 }
 
-int main()
+int main(int argc, char *argv[])
 {
     int r;
     Device device;
     libusb_hotplug_callback_handle hp[4];
+
+    parse_arguments(argc, argv);
 
     /*
      * INIT LIBUSB
