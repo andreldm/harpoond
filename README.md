@@ -14,7 +14,7 @@ Bluetooth support is also out of scope.
 >
 > Finally, the fact that it cannot persist settings and reset them after 60 seconds seems to be by design so users will have iCUE running all the time, which is either stupid or shady.
 
-## How to build and use
+## How to build
 
 ### Linux
 
@@ -23,8 +23,8 @@ You need to have installed a C compiler and libsub, on Arch that's possible with
 ```shell
 git clone https://github.com/andreldm/harpoond
 cd harpoond
-# Tweak values in harpoond.c, where it says "Set custom configuration"
 make
+# Customize harpoond.service with the desired arguments
 sudo make install
 systemctl --user enable --now harpoond.service
 ```
@@ -39,9 +39,16 @@ In a mingw64 shell, run:
 pacman -S git make pkg-config mingw-w64-x86_64-gcc mingw-w64-x86_64-libusb
 git clone https://github.com/andreldm/harpoond
 cd harpoond
-# Tweak values in harpoond.c, where it says "Set custom configuration"
 make -f Makefile.msys2
 # Press Win + R, execute shell:startup, create a shortcut to harpoon.exe in that folder
+```
+
+## How to use
+
+You can set the default values for RGB and DPI by yourself at the beginning of `harpoond.c` or pass arguments, for example:
+
+```shell
+./harpoond --r1 239 --g1 71 --b1 111 --r2 6 --g2 214 --b2 160 --dpi 3000
 ```
 
 ## Uninstall
