@@ -18,8 +18,8 @@
 
 static volatile short RUNNING = 1;
 static struct timeval zero_tv = {0};
-static unsigned int r1 = 0x00, g1 = 0x00, b1 = 0x00; // Default: Main LED off
-static unsigned int r2 = 0x00, g2 = 0xff, b2 = 0x00; // Default: Indicator LED green
+static unsigned int r1 = 0, g1 = 0, b1 = 0; /* Main LED, Default: off */
+static unsigned int r2 = 0, g2 = 255, b2 = 0; /* Indicator LED, Default: green */
 
 typedef enum {NONE = 0, WIRED, DONGLE} DeviceType;
 typedef struct
@@ -59,6 +59,9 @@ static void parse_arguments(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
     }
+
+    printf("Main LED: (RGB %d, %d, %d) \033[38;2;%d;%d;%dm■\033[0m\n", r1, g1, b1, r1, g1, b1);
+    printf("Indicator LED: (RGB %d, %d, %d) \033[38;2;%d;%d;%dm■\033[0m\n", r2, g2, b2, r2, g2, b2);
 }
 
 static void signal_handler()
